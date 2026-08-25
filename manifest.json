@@ -1,0 +1,32 @@
+{
+  "name": "web-change-monitor",
+  "version": "1.0.0",
+  "description": "网页变更主动监控与语义提醒插件，补齐 AI 跨时间线监听网页动态与语义评估的能力。",
+  "author": "Agent Developer",
+  "tools": [
+    {
+      "name": "add_monitor_task",
+      "description": "添加一个新的网页监控任务，包含目标网址与语义匹配 Prompt。",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_id": { "type": "string", "description": "任务唯一标识符" },
+          "name": { "type": "string", "description": "任务名称或描述" },
+          "url": { "type": "string", "description": "目标网页 URL" },
+          "prompt": { "type": "string", "description": "触发提醒的 AI 语义判定条件" }
+        },
+        "required": ["task_id", "name", "url", "prompt"]
+      }
+    },
+    {
+      "name": "run_monitor_check",
+      "description": "立即执行一次网页轮询抓取、Hash 预比对及 AI 语义评估。",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_id": { "type": "string", "description": "可选：指定单任务 ID，若为空则检查所有任务" }
+        }
+      }
+    }
+  ]
+}
