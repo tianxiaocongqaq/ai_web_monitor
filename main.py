@@ -20,7 +20,6 @@ def save_config(config):
         json.dump(config, f, ensure_ascii=False, indent=2)
 
 def fetch_page_text(url: str) -> str:
-    """抓取网页内容并提取纯文本"""
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
     resp = requests.get(url, headers=headers, timeout=15)
     resp.encoding = resp.apparent_encoding or 'utf-8'
@@ -30,24 +29,18 @@ def fetch_page_text(url: str) -> str:
     return soup.get_text(separator="\n", strip=True)
 
 def add_monitor_task(task_id: str, name: str, url: str, prompt: str) -> dict:
-    """Agent 工具：添加监控任务"""
     config = load_config()
     new_task = {"id": task_id, "name": name, "url": url, "prompt": prompt}
-    
-    # 更新或追加任务
     existing = [t for t in config["tasks"] if t["id"] == task_id]
     if existing:
         config["tasks"].remove(existing[0])
     config["tasks"].append(new_task)
-    
     save_config(config)
     return {"status": "success", "message": f"任务 [{name}] 已成功添加/更新。"}
 
 def run_monitor_check(task_id: str = None) -> list:
-    """Agent 工具：执行网页检查与语义评估"""
     config = load_config()
     results = []
-    
     tasks = config["tasks"]
     if task_id:
         tasks = [t for t in tasks if t["id"] == task_id]
@@ -55,18 +48,15 @@ def run_monitor_check(task_id: str = None) -> list:
     for task in tasks:
         tid = task["id"]
         cache_file = os.path.join(DATA_DIR, f"{tid}.hash")
-        
         try:
             text = fetch_page_text(task["url"])
             current_hash = hashlib.md5(text.encode("utf-8")).hexdigest()
-            
             last_hash = None
             if os.path.exists(cache_file):
                 with open(cache_file, "r") as f:
                     last_hash = f.read().strip()
                     
             if current_hash != last_hash:
-                # LLM 语义识别
                 client = OpenAI(
                     api_key=config.get("openai_api_key", os.getenv("OPENAI_API_KEY")),
                     base_url=config.get("openai_base_url", "https://api.openai.com/v1")
@@ -83,8 +73,6 @@ def run_monitor_check(task_id: str = None) -> list:
                     temperature=0.2
                 )
                 ai_output = response.choices[0].message.content
-                
-                # 更新 Hash
                 with open(cache_file, "w") as f:
                     f.write(current_hash)
                     
@@ -105,6 +93,3 @@ def run_monitor_check(task_id: str = None) -> list:
             results.append({"task_id": tid, "error": str(e)})
             
     return results
-
-if __name__ == "__main__":
-    print(run_monitor_check())
